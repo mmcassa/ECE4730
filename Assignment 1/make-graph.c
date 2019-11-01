@@ -8,10 +8,11 @@
 int main(int argc, char* argv[]) {
     // Initialize variables
     int i,j,k;
-    int n;          // Matrix will be size n x n 
-    int r;          // values within matrix will be 0 to r
-    int p;          // modulus value
+    int n,n_chk = 0;          // Matrix will be size n x n 
+    int r,r_chk = 0;          // values within matrix will be 0 to r
+    int p,p_chk = 0;          // modulus value
     int u;          // random number generated
+    int o_chk = 0;
     char *file_name = calloc(100,sizeof(char));
     int **matrix;   // storage before export values
     char *args[] = {"-n","-r","-p","-o"};
@@ -39,18 +40,34 @@ int main(int argc, char* argv[]) {
         switch (j)
             {
             case 0:
+                if (n_chk++ == 1) {
+                    printf("Usage:  Do not repeat a tag\n");
+                    exit(1);
+                }
                 n = atoi(argv[i+1]);
                 break;
 
             case 1:
+                if (r_chk++ == 1) {
+                    printf("Usage:  Do not repeat a tag\n");
+                    exit(1);
+                }
                 r = atoi(argv[i+1]);
                 break;
 
             case 2:
+                if (p_chk++ == 1) {
+                    printf("Usage:  Do not repeat a tag\n");
+                    exit(1);
+                }
                 p = atoi(argv[i+1]);
                 break;
             
             case 3:
+                if (o_chk++ == 1) {
+                    printf("Usage:  Do not repeat a tag\n");
+                    exit(1);
+                }
                 file_name = argv[i+1];
                 break;
             
@@ -86,10 +103,5 @@ int main(int argc, char* argv[]) {
 
     // Export graph to file
     write_graph(file_name,n,matrix);
-    /*
-    int **A;
-    read_graph(file_name,&n,&A);
-    print_graph(n,A);
-    */
     return 0;
 }

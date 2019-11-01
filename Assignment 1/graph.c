@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define MAXCHAR 10
 
 void read_graph(char *file_name, int *n, int ***A) {
-    int i, j;
-    char temp;
+    int i, j, k;
+    char temp[10];
     FILE *file;
 
     file = fopen(file_name, "r");
@@ -14,23 +15,15 @@ void read_graph(char *file_name, int *n, int ***A) {
         printf("Error, invalid file name\n");  
         exit(0);
     }
-    fread(&temp,1,1,file);
-    *n = atoi(&temp);
-    fread(&temp,1,1,file); // Skip newline
+    //fgets(&temp,MAXCHAR,file);
+    fscanf (file, "%d\n", n);
+    //*n = atoi(&temp);
     
     *A = (int **) calloc(*n,sizeof(int *));
     for(i=0;i<*n;i++) {
         A[0][i] = (int *) calloc(*n,sizeof(int));
         for(j=0;j<*n;j++) {
-            fread(&temp,1,1,file);
-            if (temp == '-') {
-                fread(&temp,1,1,file);
-                A[0][i][j] = -1;
-            } else {
-                A[0][i][j] = atoi(&temp);
-            }
-            fread(&temp,1,1,file);
-
+            fscanf(file, "%d ",&(A[0][i][j]));
         }
     }
 
@@ -103,4 +96,11 @@ void print_graph(int n, int **A) {
     printf("\n");
   }
 
+}
+
+int min(int a, int b) {
+    if (a < b) 
+        return a;
+    else 
+        return b;
 }

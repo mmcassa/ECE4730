@@ -14,16 +14,23 @@ void read_graph(char *file_name, int *n, int ***A) {
         printf("Error, invalid file name\n");  
         exit(0);
     }
-    fgets(&temp,1,file);
+    fread(&temp,1,1,file);
     *n = atoi(&temp);
-    fgets(&temp,1,file); // Skip newline
-
-    *A = calloc(*n,sizeof(int));
+    fread(&temp,1,1,file); // Skip newline
+    
+    *A = (int **) calloc(*n,sizeof(int *));
     for(i=0;i<*n;i++) {
-        *(A[i]) = calloc(*n,sizeof(int));
+        A[0][i] = (int *) calloc(*n,sizeof(int));
         for(j=0;j<*n;j++) {
-            fgets(&temp,1,file);
-            *(A[i][j]) = atoi(&temp);
+            fread(&temp,1,1,file);
+            if (temp == '-') {
+                fread(&temp,1,1,file);
+                A[0][i][j] = -1;
+            } else {
+                A[0][i][j] = atoi(&temp);
+            }
+            fread(&temp,1,1,file);
+
         }
     }
 
@@ -42,8 +49,6 @@ void write_graph(char *file_name, int n, int **A) {
         printf("Error, invalid file name\n");  
         exit(0);
     }
-
-    printf("%s\n",file_name);
 
     fprintf(file,"%d\n",n);
 

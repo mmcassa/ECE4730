@@ -62,11 +62,13 @@ int main(int argc, char* argv[]) {
     }
 
     // Matrix calloc
-    matrix = calloc(n,sizeof(int));
-
+    matrix = (int **) calloc(n,sizeof(int *));
+    for (i=0;i<n;i++) {
+        matrix[i] = (int *) calloc(n,sizeof(int));
+    }
     // Start the random number generation
     for (i=0;i<n;i++) {
-        matrix[i] = calloc(n,sizeof(int));
+        //matrix[i] = calloc(n,sizeof(int));
         for (j=0;j<n;j++) {
             if (i != j) {
                 u = (rand() % (p-1)) + 1;
@@ -79,13 +81,10 @@ int main(int argc, char* argv[]) {
             } else {
                 matrix[i][j] = 0;
             }
-            printf("%d ",matrix[i][j]);
         }
-        printf("\n");
     }
 
     // Export graph to file
-    
     write_graph(file_name,n,matrix);
     int **A;
 

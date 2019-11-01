@@ -1,3 +1,10 @@
+/* Mitchell Cassaday & William (Luke) Benton
+ * ECE4730
+ * Fall 2019
+ * 4 NOV 2019
+ * Goal: Helper functions
+ */
+
 #include "graph.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -98,9 +105,4 @@ void print_graph(int n, int **A) {
 
 }
 
-int min(int a, int b) {
-    if (a < b) 
-        return a;
-    else 
-        return b;
 }

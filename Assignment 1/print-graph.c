@@ -1,3 +1,10 @@
+/* Mitchell Cassaday & William (Luke) Benton
+ * ECE4730
+ * Fall 2019
+ * 4 NOV 2019
+ * Goal: Displays a graph from a file
+ */
+
 #include "graph.h"
 #include <stdlib.h>
 #include <stdio.h>

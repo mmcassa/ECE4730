@@ -1,3 +1,10 @@
+/* Mitchell Cassaday & William (Luke) Benton
+ * ECE4730
+ * Fall 2019
+ * 4 NOV 2019
+ * Goal: Creates a graph of data connections
+ */
+
 #include "graph.h"
 #include <stdlib.h>
 #include <stdio.h>

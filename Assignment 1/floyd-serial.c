@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     file_out = argv[2];
 
     read_graph(file_in,&n,&A);
-    print_graph(n,A);
+    //print_graph(n,A);
 
     floyd = (int **) calloc(n,sizeof(int *));
     for (i=0;i<n;i++) {
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
         }
     }
     printf("\n\n\n");
-    print_graph(n,A);
+    //print_graph(n,A);
     write_graph(file_out,n,A);
     return 0;
 }

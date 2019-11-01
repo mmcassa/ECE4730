@@ -9,11 +9,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define MAXCHAR 10
+#define MAXCHAR 15
 
 void read_graph(char *file_name, int *n, int ***A) {
     int i, j, k;
-    char temp[10];
+    //char temp[MAXCHAR];
     FILE *file;
 
     file = fopen(file_name, "r");
@@ -22,9 +22,8 @@ void read_graph(char *file_name, int *n, int ***A) {
         printf("Error, invalid file name\n");  
         exit(0);
     }
-    //fgets(&temp,MAXCHAR,file);
+    // Read in n
     fscanf (file, "%d\n", n);
-    //*n = atoi(&temp);
     
     *A = (int **) calloc(*n,sizeof(int *));
     for(i=0;i<*n;i++) {
@@ -105,4 +104,3 @@ void print_graph(int n, int **A) {
 
 }
 
-}

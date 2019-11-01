@@ -33,10 +33,11 @@ int main(int argc, char* argv[]) {
     read_graph(file_in,&n,&A);
     print_graph(n,A);
 
-    floyd = (int **) calloc(n,sizeof(int *));
+    /*floyd = (int **) calloc(n,sizeof(int *));
     for (i=0;i<n;i++) {
         floyd[i] = (int *) calloc(n,sizeof(int));
-    }
+    }*/
+    
     /* Begin Parallel Portion of the program */
 
     // Initialize the MPI environment

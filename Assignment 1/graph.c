@@ -1,36 +1,64 @@
 #include "graph.h"
-
 #include <stdlib.h>
 #include <stdio.h>
-#include <mpi.h>
 
 
 void read_graph(char *file_name, int *n, int ***A) {
+    int i, j;
+    char temp;
+    FILE *file;
 
+    file = fopen(file_name, "r");
+    if (file == NULL)
+    {
+        printf("Error, invalid file name\n");  
+        exit(0);
+    }
+    fgets(&temp,1,file);
+    *n = atoi(&temp);
+    fgets(&temp,1,file); // Skip newline
+
+    *A = calloc(*n,sizeof(int));
+    for(i=0;i<*n;i++) {
+        *(A[i]) = calloc(*n,sizeof(int));
+        for(j=0;j<*n;j++) {
+            fgets(&temp,1,file);
+            *(A[i][j]) = atoi(&temp);
+        }
+    }
+
+    fclose(file);
+    
 }
 
 void write_graph(char *file_name, int n, int **A) {
 
-  int i, j;
-  FILE *file;
+    int i, j;
+    FILE *file;
 
-  file = fopen(file_name, "w");
-  if (file == NULL)
-  {
-    printf("Error, invalid file name\n");
-    exit(0);
-  }
-  for (i < 0; i <= n; i++)
-  {
-    for (j < 0; j <= n; i++)
+    file = fopen(file_name, "w");
+    if (file == NULL)
     {
-      fprintf(file, "%d ", A[i][j]);
+        printf("Error, invalid file name\n");  
+        exit(0);
     }
-  }
-  return;
+
+    printf("%s\n",file_name);
+
+    fprintf(file,"%d\n",n);
+
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < n; j++)
+        {
+            fprintf(file, "%d ", A[i][j]);
+        }
+    }
+    fprintf(file,"\n");
+    fclose(file);
 }
 
-void print_graph(int *n, int **A) {
+void print_graph(int n, int **A) {
   
   int i, j;
 

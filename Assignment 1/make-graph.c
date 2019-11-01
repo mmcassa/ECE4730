@@ -86,9 +86,10 @@ int main(int argc, char* argv[]) {
 
     // Export graph to file
     write_graph(file_name,n,matrix);
+    /*
     int **A;
-
     read_graph(file_name,&n,&A);
     print_graph(n,A);
+    */
     return 0;
 }

@@ -85,9 +85,9 @@ int main(int argc, char* argv[]) {
         
     }
     MPI_Bcast (&n, 1, MPI_INT, 0, comm_grid);
-    printf("%d %d\n",world_rank,n);
+    //printf("%d %d\n",world_rank,n);
     distribute(MPI_INT,n,&loc_matrix,A,comm_grid);
-
+    
 
     /* Begin Parallel Portion of the program */
     compute(comm_grid,row_comm,col_comm,world_rank,coords,dims,n,world_size,loc_matrix);
@@ -131,6 +131,7 @@ int main(int argc, char* argv[]) {
     if( world_rank == 0 ) {
         
         print_graph(n,A);
+        MPI_Finalize();
         //print_graph(n,loc_matrix);
         //write_graph(file_out,n,A);
     }
@@ -164,35 +165,71 @@ void compute(   MPI_Comm grid,      // Grid comm
     int k,i,j,l;      // Loop values
     int sender;     // Rank of Broadcaster
     int grid_coord[2] = {0,0};  /* Process coords */
+    int send_coords[2] = {0,0};
     int grid_period[2] = {0,0}; /* Wraparound */
     int grid_size[2] = {0,0};   /* Dimensions of grid */
+    int *temp_k;
     int *k_row;
-    int k_col;
+    int k_col = 0;
     int rel_r, rel_c;
 
     MPI_Cart_get(grid, 2, grid_size, grid_period,grid_coord);
     
-    k_row = (int *) calloc(BLOCK_SIZE(grid_coord[0],grid_size[0],n),sizeof(int));
     
+    int local_rows = BLOCK_SIZE(grid_coord[0],grid_size[0],n);
+    int local_cols = BLOCK_SIZE(grid_coord[1],grid_size[1],n);
+    k_row = (int *) calloc(local_cols,sizeof(int));
+    temp_k = (int *) calloc(local_cols,sizeof(int));
+
+    printf("Rank %d %d %d\n",rank,local_rows,local_cols);
+    printf("\n");
     for(k=0;k<n;k++) {
+        send_coords[0] = k/(n/grid_size[0]);
+        send_coords[1] = coords[1];
+        //sender = k/(n/size)*grid_size[0]+coords[1];
+        MPI_Cart_rank (grid, send_coords, &sender);
         
-        sender = k/(n/size)*grid_size[0]+coords[1];
-        rel_r = k % (grid_size[0]*BLOCK_SIZE(grid_coord[0],grid_size[0],n));
+        rel_r = k % (local_rows);
+        printf("SENDER %d %d\n",sender,rel_r);
         if (sender == rank) {
-            k_row = loc_matrix[rel_r];
+            //k_row = loc_matrix[rel_r];
+            memcpy(temp_k,loc_matrix[rel_r],local_cols*sizeof(int));//k_row[l] = 0;
+
+            //printf("Sender: %d %d\n",rank,rel_r);
+            MPI_Allreduce((void *) temp_k,(void *) k_row,local_cols,MPI_INT,MPI_SUM,cols);
+        } else {
+            for (l=0;l<local_cols;l++) {
+                temp_k[l] = 0;
+            }
+            MPI_Allreduce((void *) temp_k,(void *) k_row,local_cols,MPI_INT,MPI_SUM,cols);
         }
+
+        if (rank != 0 && sender == rank) {
+            /*printf("K_row (rank %d): ",rank);
+            for (l=0;l<local_cols;l++) {
+                printf("%d ", k_row[l]);
+            }
+            printf("\n");*/
+        }
+        //MPI_Bcast((void *) k_row, n, MPI_INT, sender, cols);
         
-        MPI_Bcast((void *) k_row, n, MPI_INT, sender, cols);
         for (i=0;i<BLOCK_SIZE(grid_coord[0],grid_size[0],n);i++) {
             //printf("%d\t %d %d %d %d %d\n",rank,k,n,size,grid_size[0],coords[1]);
             sender = k/(n/size)*grid_size[0]+coords[1];
             rel_c = k % ((coords[1]+1)*BLOCK_SIZE(grid_coord[0],grid_size[0],n));
             if (sender == rank) {
-                k_col = loc_matrix[i][rel_c];
+                l = loc_matrix[i][rel_c];
+                //printf("Rank: %d %d %d %d\t %d %d %d\n",rank,rel_r,rel_c,k_col,k,i,j);
+            } else {
+                l = 0;
             }
-            //printf("%d %d %d\t %d %d %d\n",rel_r,rel_c,k_col,k,i,j);
-            MPI_Bcast(&k_col, n, MPI_INT, sender, row);
-            //printf("\t%d\n",k_col);
+            
+            //MPI_Bcast((void *) &k_col, 1, MPI_INT, sender, row);
+            MPI_Allreduce(&l,&k_col,1,MPI_INT,MPI_SUM,row);
+
+            if (sender != rank) {
+                printf("k_col: \t%d ",k_col);
+            }
             for (j=0;j<BLOCK_SIZE(grid_coord[1],grid_size[1],n);j++) {
                 if (k_col > 0 && k_row[j] > 0) {
                     if ((k_col + k_row[j]) < loc_matrix[i][j] || loc_matrix[i][j] == -1) {
@@ -200,7 +237,7 @@ void compute(   MPI_Comm grid,      // Grid comm
                     }
                 }
             }
-        } 
+        } printf("\n");
     }
 
 

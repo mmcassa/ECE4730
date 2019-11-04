@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
     int **loc_matrix;
     char *file_in = calloc(100,sizeof(char));
     char *file_out = calloc(100,sizeof(char));
-    
+    MPI_Status status;
     // Initialize the MPI environment
 	MPI_Init(&argc, &argv);
     MPI_Comm comm = MPI_COMM_WORLD;
@@ -81,8 +81,11 @@ int main(int argc, char* argv[]) {
 
         // Read in data
         read_graph(file_in,&n,&A);
-        MPI_Bcast (&n, 1, MPI_INT, 0, comm_grid);
+        //print_graph(n,A);
+        
     }
+    MPI_Bcast (&n, 1, MPI_INT, 0, comm_grid);
+    printf("%d %d\n",world_rank,n);
     distribute(MPI_INT,n,&loc_matrix,A,comm_grid);
 
 
@@ -91,40 +94,46 @@ int main(int argc, char* argv[]) {
 
     // 
     MPI_Cart_get(comm_grid, 2, grid_size, grid_period,grid_coord);
-    MPI_Datatype rowType,arrType;
-    MPI_Type_contiguous(BLOCK_SIZE(grid_coord[0],grid_size[0],n), MPI_INT, &rowType);
-    MPI_Type_commit(&rowType);
-    MPI_Type_contiguous(BLOCK_SIZE(grid_coord[1],grid_size[1],n), rowType, &arrType);
-    MPI_Type_commit(&arrType);
+    int local_rows = BLOCK_SIZE(grid_coord[0],grid_size[0],n);
+    int local_cols = BLOCK_SIZE(grid_coord[1],grid_size[1],n);
+    int send_coords[2] = {0,0};
+    int dest_id;
 
-    MPI_Datatype allArray;
-    MPI_Type_contiguous(world_size, arrType, &allArray);
-    MPI_Type_commit(&allArray);
-    int ***allData;
-    
+    for(i=0;i<grid_size[0];i++) {
+        send_coords[0] = i;
 
-    if( world_rank == 0 ) {
-        allData  = (int***) calloc(world_size,sizeof(int **));
-        
-        MPI_Gather(loc_matrix, 1, arrType, allData, 1, allArray,0,comm_grid);
-        for(i=0;i<world_size;i++) {
-            for(j=0;j<sizeof(allData[i])/sizeof(int **);j++) {
-                for(k=0;k<sizeof(allData[i][j])/sizeof(int *);k++) {
-                    printf("%d ",allData[i][j][k]);
+        for (j=0;j<BLOCK_SIZE(i,grid_size[0],n);j++) {
+
+            
+            for (k=0;k<grid_size[1]; k++) {
+                send_coords[1] = k;
+
+
+                MPI_Cart_rank (comm_grid, send_coords, &dest_id);
+                printf("%d %d %d\n",i,j,k);
+                if (world_rank == 0) {
+                    if (dest_id == 0) {
+                        memcpy (A[j],loc_matrix[j],
+                            local_cols * sizeof(int));
+                    } else {
+                        MPI_Recv (&(A[j][k*local_cols]), local_cols, MPI_INT,0,0, comm_grid,&status);
+                    }
+                } else if (world_rank == dest_id) {
+                    MPI_Send (&(loc_matrix[k][0]),BLOCK_SIZE(k,grid_size[1],n), MPI_INT,dest_id, 0, comm_grid);
                 }
-                printf("\n");
+                
             }
-            printf("\n");
+            
+
+            
         }
-        //print_graph(n,);
-        MPI_Type_contiguous(BLOCK_SIZE(grid_coord[1],grid_size[1],n), rowType, &arrType);
-        MPI_Type_commit(&arrType);
-    } else {
-        MPI_Gather(loc_matrix, 1, arrType, allData, 1, NULL,0,comm_grid);
     }
-    
-    //if (world_rank == 0)
-    //    write_graph(file_out,n,A);
+    if( world_rank == 0 ) {
+        
+        print_graph(n,A);
+        //print_graph(n,loc_matrix);
+        //write_graph(file_out,n,A);
+    }
         
     return 0;
 }

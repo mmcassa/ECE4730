@@ -92,19 +92,40 @@ int main(int argc, char* argv[]) {
     // 
     MPI_Cart_get(comm_grid, 2, grid_size, grid_period,grid_coord);
     MPI_Datatype rowType,arrType;
-    MPI_Type_contiguous(n, MPI_INT, &rowType);
+    MPI_Type_contiguous(BLOCK_SIZE(grid_coord[0],grid_size[0],n), MPI_INT, &rowType);
     MPI_Type_commit(&rowType);
-    MPI_Type_vector(n*n,1,0, rowType, &arrType);
+    MPI_Type_contiguous(BLOCK_SIZE(grid_coord[1],grid_size[1],n), rowType, &arrType);
     MPI_Type_commit(&arrType);
-    
-    if(world_rank == 0) {
 
-        MPI_Gather(&loc_matrix, 1, arrType, A, 1, A, 0,comm_grid);
+    MPI_Datatype allArray;
+    MPI_Type_contiguous(world_size, arrType, &allArray);
+    MPI_Type_commit(&allArray);
+    int ***allData;
+    
+
+    if( world_rank == 0 ) {
+        allData  = (int***) calloc(world_size,sizeof(int **));
+        
+        MPI_Gather(loc_matrix, 1, arrType, allData, 1, allArray,0,comm_grid);
+        for(i=0;i<world_size;i++) {
+            for(j=0;j<sizeof(allData[i])/sizeof(int **);j++) {
+                for(k=0;k<sizeof(allData[i][j])/sizeof(int *);k++) {
+                    printf("%d ",allData[i][j][k]);
+                }
+                printf("\n");
+            }
+            printf("\n");
+        }
+        //print_graph(n,);
+        MPI_Type_contiguous(BLOCK_SIZE(grid_coord[1],grid_size[1],n), rowType, &arrType);
+        MPI_Type_commit(&arrType);
     } else {
-        MPI_Gather(&loc_matrix, 1, arrType, NULL, 1, A, 0,comm_grid);
+        MPI_Gather(loc_matrix, 1, arrType, allData, 1, NULL,0,comm_grid);
     }
-    print_graph(n,A);
-    //write_graph(file_out,n,A);
+    
+    //if (world_rank == 0)
+    //    write_graph(file_out,n,A);
+        
     return 0;
 }
 

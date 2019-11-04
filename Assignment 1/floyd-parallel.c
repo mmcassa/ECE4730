@@ -37,9 +37,9 @@ int main(int argc, char* argv[]) {
     for (i=0;i<n;i++) {
         floyd[i] = (int *) calloc(n,sizeof(int));
     }*/
-    
-    /* Begin Parallel Portion of the program */
 
+    /* Begin Parallel Portion of the program */
+    // https://www.palmetto.clemson.edu/jupyterhub/hub/spawn
     // Initialize the MPI environment
 	MPI_Init(NULL, NULL);
 	// Find out rank, size
@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 	int world_size;
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
 
 
     for(k=0;k<n;k++) {

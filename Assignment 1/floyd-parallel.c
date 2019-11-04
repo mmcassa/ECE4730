@@ -19,27 +19,6 @@ int main(int argc, char* argv[]) {
     char *file_in = calloc(100,sizeof(char));
     char *file_out = calloc(100,sizeof(char));
 
-
-    // Parse out arguemnets
-    if (argc != 3) {
-        printf("Usage:  print-graph {file_name}\n");
-        exit(1);
-    }
-
-    file_in = argv[1];
-    file_out = argv[2];
-
-    // Read in data
-    read_graph(file_in,&n,&A);
-    print_graph(n,A);
-
-    /*floyd = (int **) calloc(n,sizeof(int *));
-    for (i=0;i<n;i++) {
-        floyd[i] = (int *) calloc(n,sizeof(int));
-    }*/
-
-    /* Begin Parallel Portion of the program */
-    // https://www.palmetto.clemson.edu/jupyterhub/hub/spawn
     // Initialize the MPI environment
 	MPI_Init(NULL, NULL);
 	// Find out rank, size
@@ -47,6 +26,29 @@ int main(int argc, char* argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 	int world_size;
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+
+    if (world_rank == 0) {
+        // Parse out arguemnets
+        if (argc != 3) {
+            printf("Usage:  print-graph {file_name}\n");
+            exit(1);
+        }
+
+        
+        file_in = argv[1];
+        file_out = argv[2];
+
+        // Read in data
+        read_graph(file_in,&n,&A);
+        distribute(world_size,A);
+    }
+    //print_graph(n,A);
+
+
+    /* Begin Parallel Portion of the program */
+    
+    
 
 
 
@@ -67,7 +69,22 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void distribute()
+/* 
+    Create the Cartesian space for 1, 2, 4, 8, 16, 32, and 64 processes
+*/
+void distribute(int size, int **matrix) {
+    int ndim;
+    int *dim;
+    if (size < 4) {
+        ndim = 1;
+        dim = (int *) calloc(1,sizeof(int));
+    } else {
+        ndim = 2;
+        dim = (int *) calloc(2,sizeof(int));
+    }
+}
 
-void compute()
+void compute() {
+
+}
 

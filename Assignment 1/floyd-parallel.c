@@ -14,6 +14,8 @@
 #include <mpi.h>
 
 
+int findSource(int *grid_size,int *grid_coords,int k,int n);
+int hasRow(int k,int *coords,int n,int *grid_size,int *grid_coord);
 void distribute (
    MPI_Datatype dtype,   /* IN - Element type */
    int n,               /* IN - Array cols */
@@ -99,47 +101,45 @@ int main(int argc, char* argv[]) {
     int send_coords[2] = {0,0};
     int dest_id;
     int **temp_arr;
-    /*
-    for(i=0;i<grid_size[0];i++) {
-        send_coords[0] = i;
-
-        for (j=0;j<BLOCK_SIZE(i,grid_size[0],n);j++) {
-
-            
-            for (k=0;k<grid_size[1]; k++) {
-                send_coords[1] = k;
-
-
-                MPI_Cart_rank (comm_grid, send_coords, &dest_id);
-                
-                if (world_rank == 0) {
-                    if (dest_id == 0) {
-                        memcpy (A[j],loc_matrix[j],
-                            local_cols * sizeof(int));
-                    } else {
-                        printf("%d %d %d\n",i,j,k); 
-                        MPI_Recv (&(A[j][k*local_cols]), local_cols, MPI_INT,0,0, comm_grid,&status);
+    int *red_arr;
+    int isColZ;
+    int t;
+    /* Loop through every row */
+    for (k=0;k<n;k++) {
+        /* If process contains row, then gatherv to the root of the row */
+        isColZ = hasRow(k,coords,n,grid_size,grid_coord);
+        if (isColZ) {
+            /* If task is root of row, gather */
+            if (0 == coords[1]) {
+                //temp_arr = calloc(n,sizeof(int));
+                red_arr = (int *) calloc(n,sizeof(int));
+                MPI_Gather(&loc_matrix[i],local_cols,MPI_INT,temp_arr,1,MPI_INT,world_rank,row_comm);
+                t = 0;
+                for(i=0;i<grid_size[1];i++) {
+                    t += BLOCK_SIZE(i,grid_size[1],n);
+                    for (j=0;j<BLOCK_SIZE(i,grid_size[1],n);j++) {
+                        red_arr[t+j] = temp_arr[i][j];
                     }
-                } else if (world_rank == dest_id) {
-                    printf("%d %d %d\n",i,j,k); 
-                    MPI_Send (&(loc_matrix[k][0]),BLOCK_SIZE(k,grid_size[1],n), MPI_INT,dest_id, 0, comm_grid);
                 }
-                
+            } else {
+                /* Else send to gatherv */
+                MPI_Gather(loc_matrix[i],local_cols,MPI_INT,temp_arr,1,MPI_INT,(world_rank - world_rank % grid_size[1]),row_comm);
             }
-            
-
-            
+        }
+        /* If task is world 0 RECV with tag k and store in A[k] */
+        if (world_rank == 0) {
+            if (isColZ) {
+                memcpy(A[k],temp_arr,sizeof(int)*n);
+            } else {
+                MPI_Recv(A[k],n,MPI_INT,findSource(grid_size,grid_coord,k,n),k,comm_grid,&status);
+            }
+        /* If task has the gathered row, SEND with tag k to root */
+        } else if (coords[1] == 0 && isColZ) {
+            MPI_Send(temp_arr,n,MPI_INT,0,k,comm_grid);
         }
     }
-    */
-   if (world_rank == 0 ) {
-       for (i=0;i<grid_size[0]*grid_size[1];i++) {
-            MPI_Recv(&(temp_arr),)
-           }
-       } 
-   } else {
-       MPI_Send (&(loc_matrix),local_cols*local_rows, MPI_INT,0, coords[0]*n+coords[1], comm_grid);
-   }
+
+
     if (world_rank == 0) {
         print_graph(n,A);
     }
@@ -155,6 +155,26 @@ int main(int argc, char* argv[]) {
         }
     }
     return 0;
+}
+
+int findSource(int *grid_size,int *grid_coords,int k,int n) {
+    int i=0,ret;
+    while(ret < k) {
+        ret += BLOCK_SIZE(i++,grid_size[0],n);
+    }
+    return i*grid_size[1];
+}
+int hasRow(int k,int *coords,int n,int *grid_size,int *grid_coord) {
+    int rows = 0;
+    int i,j;
+    int *loc_coord;
+    memcpy(loc_coord,coords,2*sizeof(int));
+    for(i=coords[0-1];i>=0;i--) {
+        rows += BLOCK_SIZE(i,grid_size[0],n);
+    }
+    if (k >= rows && k < (rows+BLOCK_SIZE(grid_coord[0],grid_size[0],n)))
+        return k-rows;
+    return -1;
 }
 
 void gather(    MPI_Comm grid,      // Grid comm
@@ -270,8 +290,7 @@ void distribute (
    int n,               /* IN - Array cols */
    int ***local_array,  /* OUT - 2D Array */
    int **full_matrix,   /* IN - Full 2D Array from File */
-   MPI_Comm grid_comm)   /* IN - Communicator */
-{
+   MPI_Comm grid_comm) {
     void      *buffer;         /* File buffer */
     int        coords[2];      /* Coords of proc receiving
                                     next row of matrix */

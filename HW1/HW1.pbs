@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#PBS -N HW1
+#PBS -l select=2:ncpus=4:mpiprocs=4:mem=2gb:interconnect=1g
+#PBS -l walltime=00:10:00
+#PBS -j oe
+
+source /etc/profile.d/modules.sh
+module purge
+module add gcc/4.8.1 openmpi/1.8.4
+
+cd $PBS_O_WORKDIR
+
+mpiexec -n 4 ./HW1

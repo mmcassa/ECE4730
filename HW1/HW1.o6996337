@@ -1,0 +1,24 @@
+Message sent from Rank: 1 to Rank: 0: msg2
+Message received on Rank: 1 from Rank: 2: msg3
+Message sent from Rank: 2 to Rank: 1: msg3
+Message sent from Rank: 0 to Rank: 3: msg1
+Message received on Rank: 0 from Rank: 1: msg2
+Message received on Rank: 2 from Rank: 3: msg4
+Message sent from Rank: 3 to Rank: 2: msg4
+Message received on Rank: 3, from Rank: 0: msg1
+ 
+ 
++------------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES REQUESTED | 
++------------------------------------------+ 
+ 
+mem=4gb,ncpus=8,walltime=00:10:00
+ 
+ 
++-------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES USED | 
++-------------------------------------+ 
+ 
+cpupercent=200,cput=00:00:04,mem=792kb,ncpus=8,vmem=12912kb,walltime=00:00:02
+ 
+ 

@@ -13,7 +13,7 @@ floyd-serial: floyd-serial.c graph.c graph.h
 	$(CC) $(CFLAGS) -o floyd-serial floyd-serial.c graph.c
 
 floyd-parallel: floyd-parallel.c graph.c graph.h
-	$(CC) $(CFLAGS) -o floyd-parallel floyd-parallel.c graph.c
+	mpicc ($CFLAGS) -o floyd-parallel floyd-parallel.c graph.c
 
 clean: 
 	rm make-graph print-graph floyd-serial floyd-parallel

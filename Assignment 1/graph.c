@@ -104,3 +104,44 @@ void print_graph(int n, int **A) {
 
 }
 
+void print_graph2(int n,int m, int **A) {
+  
+  int i, j;
+
+    // Loop through the number of rows + 2 because the first two rows are special
+  for (i = 0; i < (n + 2); i++)
+  {
+    if (i == 0)
+    {
+      printf("    |");
+    }
+    else if (i == 1)
+    {
+      printf("    |");
+    }
+    else
+    {
+      printf("%4d|",i-2);
+    }
+    // Populate the columns
+    for (j = 0; j < m; j++)
+    {
+      // If the first row
+      if (i == 0)
+      {
+          printf("%4d ", j);
+      }
+      // If the second row
+      else if (i == 1)
+      {
+        printf("-----");
+      }
+      else
+      {
+        printf("%4d ", A[i-2][j]);
+      }
+    }
+    printf("\n");
+  }
+
+}

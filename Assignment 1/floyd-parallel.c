@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
     if (world_rank == 0) {
         // Parse out arguemnets
         if (argc != 3) {
-            printf("Usage:  print-graph {file_name}\n");
+            printf("Usage:  floyd-parallel {file_in_name} {file_out_name}\n");
             exit(1);
         }
         file_in = argv[1];
@@ -83,21 +83,24 @@ int main(int argc, char* argv[]) {
 
         // Read in data
         read_graph(file_in,&n,&A);
-        //print_graph(n,A);
+        print_graph(n,A);
         
     }
     MPI_Bcast (&n, 1, MPI_INT, 0, comm_grid);
     //printf("%d %d\n",world_rank,n);
     distribute(MPI_INT,n,&loc_matrix,A,comm_grid);
-    
 
-    /* Begin Parallel Portion of the program */
-    compute(comm_grid,row_comm,col_comm,world_rank,coords,dims,n,world_size,loc_matrix);
-
-    
     MPI_Cart_get(comm_grid, 2, grid_size, grid_period,grid_coord);
     int local_rows = BLOCK_SIZE(grid_coord[0],grid_size[0],n);
     int local_cols = BLOCK_SIZE(grid_coord[1],grid_size[1],n);
+    printf("%d %d %d %d\n",world_rank,BLOCK_SIZE(grid_coord[0],grid_size[0],n),BLOCK_LOW(grid_coord[0],grid_size[0],n),BLOCK_HIGH(grid_coord[0],grid_size[0],n));
+    /* Begin Parallel Portion of the program */
+    compute(comm_grid,row_comm,col_comm,world_rank,coords,dims,n,world_size,loc_matrix);
+
+    print_graph2(local_rows,local_cols,loc_matrix);
+    MPI_Bcast (&n, 1, MPI_INT, 0, comm_grid);
+    
+    
     int send_coords[2] = {0,0};
     int row_rank;
     int *row_coords;
@@ -205,6 +208,9 @@ void compute(   MPI_Comm grid,      // Grid comm
     
     int local_rows = BLOCK_SIZE(grid_coord[0],grid_size[0],n);
     int local_cols = BLOCK_SIZE(grid_coord[1],grid_size[1],n);
+    int local_k[2][2] = {   {BLOCK_LOW(grid_coord[0],grid_size[0],n),BLOCK_HIGH(grid_coord[0],grid_size[0],n)},
+                            {BLOCK_LOW(grid_coord[1],grid_size[1],n),BLOCK_HIGH(grid_coord[1],grid_size[1],n)}
+                            };
     k_row = (int *) calloc(local_cols,sizeof(int));
     temp_k = (int *) calloc(local_cols,sizeof(int));
 
@@ -214,10 +220,10 @@ void compute(   MPI_Comm grid,      // Grid comm
         
         MPI_Cart_rank (grid, send_coords, &sender);
         
-        rel_r = k % (local_rows);
         
-        if (sender == rank) {
-            
+        
+        if (local_k[0][0] >= k && local_k[0][1] <= k) {
+            rel_r = k - local_k[0][0];
             memcpy(temp_k,loc_matrix[rel_r],local_cols*sizeof(int));
             //printf("Sender: %d %d\n",rank,rel_r);
             MPI_Allreduce((void *) temp_k,(void *) k_row,local_cols,MPI_INT,MPI_SUM,cols);
@@ -237,15 +243,16 @@ void compute(   MPI_Comm grid,      // Grid comm
         }
         //MPI_Bcast((void *) k_row, n, MPI_INT, sender, cols);
         
-        for (i=0;i<BLOCK_SIZE(grid_coord[0],grid_size[0],n);i++) {
+        for (i=0;i<local_rows;i++) {
             //printf("%d\t %d %d %d %d %d\n",rank,k,n,size,grid_size[0],coords[1]);
             //sender = k/(n/size)*grid_size[0]+coords[1];
             send_coords[0] = coords[0];
             send_coords[1] = k/(n/grid_size[1]);
             MPI_Cart_rank(grid,send_coords,&sender);
 
-            rel_c = k % (local_cols);
-            if (sender == rank) {
+            
+            if (local_k[1][0] >= k && local_k[1][1] <= k) {
+                rel_c = k - local_k[1][0];
                 memcpy(&l,&(loc_matrix[i][rel_c]),sizeof(int));
                 //printf("Rank: %d %d %d %d\t %d %d %d\n",rank,rel_r,rel_c,l,k,i,j);
             } else {
@@ -258,7 +265,7 @@ void compute(   MPI_Comm grid,      // Grid comm
             //if (sender != rank) {
                 //printf("k_col: \t%d ",k_col);
             //}
-            for (j=0;j<BLOCK_SIZE(grid_coord[1],grid_size[1],n);j++) {
+            for (j=0;j<local_cols;j++) {
                 if (k_col > 0 && k_row[j] > 0) {
                     if ((k_col + k_row[j]) < loc_matrix[i][j] || loc_matrix[i][j] == -1) {
                         loc_matrix[i][j] = k_col + k_row[j]; 

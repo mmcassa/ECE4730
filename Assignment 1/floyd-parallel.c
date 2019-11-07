@@ -71,6 +71,10 @@ int main(int argc, char* argv[]) {
     MPI_Comm row_comm,col_comm;
     MPI_Comm_split(comm_grid,coords[0],coords[1],&row_comm);
     MPI_Comm_split(comm_grid,coords[1],coords[0],&col_comm);
+    int row_rank,col_rank;
+    MPI_Comm_rank(row_comm,&row_rank);
+    MPI_Comm_rank(col_comm,&col_rank);
+    //printf("COORDS: %d %d\tROW: %d\tCOL: %d\n",coords[0],coords[1],row_rank,col_rank);
 
     if (world_rank == 0) {
         // Parse out arguemnets
@@ -83,7 +87,7 @@ int main(int argc, char* argv[]) {
 
         // Read in data
         read_graph(file_in,&n,&A);
-        print_graph(n,A);
+        //print_graph(n,A);
         
     }
     MPI_Bcast (&n, 1, MPI_INT, 0, comm_grid);
@@ -93,95 +97,107 @@ int main(int argc, char* argv[]) {
     MPI_Cart_get(comm_grid, 2, grid_size, grid_period,grid_coord);
     int local_rows = BLOCK_SIZE(grid_coord[0],grid_size[0],n);
     int local_cols = BLOCK_SIZE(grid_coord[1],grid_size[1],n);
-    printf("%d %d %d %d\n",world_rank,BLOCK_SIZE(grid_coord[0],grid_size[0],n),BLOCK_LOW(grid_coord[0],grid_size[0],n),BLOCK_HIGH(grid_coord[0],grid_size[0],n));
+    int local_k[2][2] = {   {BLOCK_LOW(grid_coord[0],grid_size[0],n),BLOCK_HIGH(grid_coord[0],grid_size[0],n)},
+                            {BLOCK_LOW(grid_coord[1],grid_size[1],n),BLOCK_HIGH(grid_coord[1],grid_size[1],n)}
+                            };
+    
     /* Begin Parallel Portion of the program */
+    //print_graph2(local_rows,local_cols,loc_matrix);
     compute(comm_grid,row_comm,col_comm,world_rank,coords,dims,n,world_size,loc_matrix);
-
-    print_graph2(local_rows,local_cols,loc_matrix);
-    MPI_Bcast (&n, 1, MPI_INT, 0, comm_grid);
     
-    
-    int send_coords[2] = {0,0};
-    int row_rank;
+    //printf("\n");
     int *row_coords;
     int dest_id;
-    int **temp_arr;
+    int *recv_size = (int *) calloc(grid_size[0],sizeof(int));
+    int *recv_disp = (int *) calloc(grid_size[0],sizeof(int));
+    int *temp_arr = (int *) calloc(n,sizeof(int));
     int *red_arr;
     int isColZ;
     int t;
+    
+    MPI_Gather(&local_cols,1,MPI_INT,recv_size,1,MPI_INT,0,row_comm);
+    
+    if (row_rank == 0) {
+        for (i=1;i<grid_size[1];i++) {
+            for (j=i-1;j>=0;j--) {
+                recv_disp[i] += recv_size[j];
+            }
+        }
+    }
     /* Loop through every row */
+    if (row_rank == 1) {
+        //printf("%d %d %d %d\n\n",local_k[0][0],local_k[0][1],local_k[1][0],local_k[1][1]);
+    }
     for (k=0;k<n;k++) {
         /* If process contains row, then gatherv to the root of the row */
-        isColZ = hasRow(k,coords,n,grid_size,grid_coord);
-        if (isColZ) {
+        //isColZ = hasRow(k,coords,n,grid_size,grid_coord);
+        if (k >= local_k[0][0] && k <= local_k[0][1]) {
+
             /* If task is root of row, gather */
-            MPI_Cart_coords(comm_grid,(world_rank - (world_rank % grid_size[1])),2,row_coords);
-            MPI_Cart_rank(comm_grid,row_coords,&row_rank);
-            if (0 == coords[1]) {
-                red_arr = (int *) calloc(n,sizeof(int));
-                MPI_Gather(&loc_matrix[i],local_cols,MPI_INT,temp_arr,1,MPI_INT,row_rank,row_comm);
-                t = 0;
-                for(i=0;i<grid_size[1];i++) {
-                    t += BLOCK_SIZE(i,grid_size[1],n);
-                    for (j=0;j<BLOCK_SIZE(i,grid_size[1],n);j++) {
-                        red_arr[t+j] = temp_arr[i][j];
-                    }
+            if (row_rank == 0) {
+                //red_arr = (int *) calloc(n,sizeof(int));
+                //MPI_Gather(&loc_matrix[i],local_cols,MPI_INT,temp_arr,1,MPI_INT,0,row_comm);
+                //printf("%d %d\n",world_rank,k-local_k[0][0]);
+                MPI_Gatherv(loc_matrix[k-local_k[0][0]],local_cols,MPI_INT,temp_arr,recv_size,recv_disp,MPI_INT,0,row_comm);
+                //printf("%d %d\n",world_rank,k-local_k[0][0]);
+
+                /*for(i=0;i<n;i++) {
+                    printf("%d ",temp_arr[i]);
                 }
+                printf("\n");
+                */
             } else {
                 /* Else send to gatherv */
-                MPI_Gather(loc_matrix[i],local_cols,MPI_INT,temp_arr,1,MPI_INT,row_rank,row_comm);
+                //printf("%d %d\n",world_rank,k-local_k[0][0]);
+
+                MPI_Gatherv(loc_matrix[k-local_k[0][0]],local_cols,MPI_INT,temp_arr,recv_size,recv_disp,MPI_INT,0,row_comm);
+                //printf("%d %d\n",world_rank,k-local_k[0][0]);
             }
         }
         /* If task is world 0 RECV with tag k and store in A[k] */
         if (world_rank == 0) {
-            if (isColZ) {
+            //printf("\t\t--k: %d %d\n",k,findSource(grid_size,grid_coord,k,n));
+            if (k >= local_k[0][0] && k <= local_k[0][1]) {
                 memcpy(A[k],temp_arr,sizeof(int)*n);
+                
             } else {
+                //printf("%d -\n",findSource(grid_size,grid_coord,k,n));
                 MPI_Recv(A[k],n,MPI_INT,findSource(grid_size,grid_coord,k,n),k,comm_grid,&status);
+                
             }
+
         /* If task has the gathered row, SEND with tag k to root */
-        } else if (coords[1] == 0 && isColZ) {
+        } else if (row_rank == 0 && k >= local_k[0][0] && k <= local_k[0][1]) {
+            //printf("%d send to root\n",world_rank);
             MPI_Send(temp_arr,n,MPI_INT,0,k,comm_grid);
         }
     }
 
 
     if (world_rank == 0) {
-        print_graph(n,A);
+        //print_graph(n,A);
         write_graph(file_out,n,A);
     }
     int error = 1; 
     MPI_Bcast(&error, 1, MPI_INT, 0, comm_grid);
     if (error != 0) {
-        if( world_rank == 0 ) {
+        //if( world_rank == 0 ) {
             
             
             MPI_Finalize();
             
-        }
+        //}
     }
     return 0;
 }
 
-int findSource(int *grid_size,int *grid_coords,int k,int n) {
-    int i=0,ret;
-    while(ret < k) {
-        ret += BLOCK_SIZE(i++,grid_size[0],n);
-    }
-    return i*grid_size[1];
-}
-int hasRow(int k,int *coords,int n,int *grid_size,int *grid_coord) {
-    int rows = 0;
-    int i,j;
-    for(i=coords[0]-1;i>=0;i--) {
-        rows += BLOCK_SIZE(i,grid_size[0],n);
-    }
-    if (k >= rows && k < (rows+BLOCK_SIZE(grid_coord[0],grid_size[0],n)))
-        return k-rows;
-    return -1;
-}
 
 
+/* Computes Floyd's Algorithm in Parallel */
+/* 
+    -----------------------------------
+    -----------------------------------
+*/
 void compute(   MPI_Comm grid,      // Grid comm
                 MPI_Comm row,       // Row comm
                 MPI_Comm cols,      // Cols comm
@@ -214,44 +230,38 @@ void compute(   MPI_Comm grid,      // Grid comm
     k_row = (int *) calloc(local_cols,sizeof(int));
     temp_k = (int *) calloc(local_cols,sizeof(int));
 
+    
     for(k=0;k<n;k++) {
         send_coords[0] = k/(n/grid_size[0]);
         send_coords[1] = coords[1];
         
-        MPI_Cart_rank (grid, send_coords, &sender);
+        //printf("%d %d\n",rank,k);
+        //print_graph2(local_rows,local_cols,loc_matrix);
         
         
         
-        if (local_k[0][0] >= k && local_k[0][1] <= k) {
+        if (local_k[0][0] <= k && local_k[0][1] >= k) {
             rel_r = k - local_k[0][0];
             memcpy(temp_k,loc_matrix[rel_r],local_cols*sizeof(int));
+
+            //MPI_Allreduce((void *) temp_k,(void *) k_row,local_cols,MPI_INT,MPI_SUM,cols);
             //printf("Sender: %d %d\n",rank,rel_r);
-            MPI_Allreduce((void *) temp_k,(void *) k_row,local_cols,MPI_INT,MPI_SUM,cols);
+
         } else {
             for (l=0;l<local_cols;l++) {
                 temp_k[l] = 0;
             }
-            MPI_Allreduce((void *) temp_k,(void *) k_row,local_cols,MPI_INT,MPI_SUM,cols);
+            
         }
+        MPI_Allreduce((void *) temp_k,(void *) k_row,local_cols,MPI_INT,MPI_SUM,cols);
 
-        if (sender != rank) {
-            /*printf("K_row (rank %d): ",rank);
-            for (l=0;l<local_cols;l++) {
-                printf("%d ", k_row[l]);
-            }
-            printf("\n");*/
-        }
-        //MPI_Bcast((void *) k_row, n, MPI_INT, sender, cols);
-        
         for (i=0;i<local_rows;i++) {
             //printf("%d\t %d %d %d %d %d\n",rank,k,n,size,grid_size[0],coords[1]);
-            //sender = k/(n/size)*grid_size[0]+coords[1];
             send_coords[0] = coords[0];
             send_coords[1] = k/(n/grid_size[1]);
-            MPI_Cart_rank(grid,send_coords,&sender);
 
             
-            if (local_k[1][0] >= k && local_k[1][1] <= k) {
+            if (local_k[1][0] <= k && local_k[1][1] >= k) {
                 rel_c = k - local_k[1][0];
                 memcpy(&l,&(loc_matrix[i][rel_c]),sizeof(int));
                 //printf("Rank: %d %d %d %d\t %d %d %d\n",rank,rel_r,rel_c,l,k,i,j);
@@ -262,9 +272,6 @@ void compute(   MPI_Comm grid,      // Grid comm
             //MPI_Bcast((void *) &k_col, 1, MPI_INT, sender, row);
             MPI_Allreduce(&l,&k_col,1,MPI_INT,MPI_SUM,row);
 
-            //if (sender != rank) {
-                //printf("k_col: \t%d ",k_col);
-            //}
             for (j=0;j<local_cols;j++) {
                 if (k_col > 0 && k_row[j] > 0) {
                     if ((k_col + k_row[j]) < loc_matrix[i][j] || loc_matrix[i][j] == -1) {
@@ -274,7 +281,7 @@ void compute(   MPI_Comm grid,      // Grid comm
             }
         }  
     }
-
+    //printf("%d %d %d %d %d\n",rank,local_k[0][0],local_k[0][1],local_k[1][0],local_k[1][1]);
 
 }
 
@@ -341,8 +348,7 @@ void distribute (
          /* Read in a row of the matrix */
 
          if (grid_id == 0) {
-             buffer = full_matrix[i*grid_size[0]+j];
-            //fread (buffer, datum_size, *n, infileptr);
+             buffer = full_matrix[BLOCK_LOW(i,grid_size[0],n)+j];
          }
 
          /* Distribute it among process in the grid row */
@@ -383,4 +389,22 @@ void distribute (
       }
    }
    if (grid_id == 0) free (buffer);
+}
+
+int findSource(int *grid_size,int *grid_coords,int k,int n) {
+    int i=0,ret=0;
+    while(BLOCK_HIGH(i,grid_size[0],n) < k) {
+        i++;
+    }
+    return i*grid_size[1];
+}
+int hasRow(int k,int *coords,int n,int *grid_size,int *grid_coord) {
+    int rows = 0;
+    int i,j;
+    for(i=coords[0]-1;i>=0;i--) {
+        rows += BLOCK_SIZE(i,grid_size[0],n);
+    }
+    if (k >= rows && k < (rows+BLOCK_SIZE(grid_coord[0],grid_size[0],n)))
+        return k-rows;
+    return -1;
 }

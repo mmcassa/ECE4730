@@ -12,7 +12,7 @@
 #define MAXCHAR 15
 
 void read_graph(char *file_name, int *n, int ***A) {
-    int i, j, k;
+    int i, j;
     //char temp[MAXCHAR];
     FILE *file;
 

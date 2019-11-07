@@ -105,7 +105,9 @@ int main(int argc, char* argv[]) {
     /* Begin Parallel Portion of the program */
     //print_graph2(local_rows,local_cols,loc_matrix);
     time2 = MPI_Wtime();
+    printf("%d\n",world_rank);
     compute(comm_grid,row_comm,col_comm,world_rank,coords,dims,n,world_size,loc_matrix);
+    printf("%d\n",world_rank);
     time2 = MPI_Wtime() - time2;
 
     

@@ -13,10 +13,10 @@
 #include <time.h>
 
 int main(int argc, char* argv[]) {
-	time_t t1, t2, temp;
+	clock_t t1, t2;
 	double result1;
 	double result2;
-	t1 = time(NULL);
+	t1 = clock();
     int i,j,k,n;
     int **A;
     int **floyd;
@@ -36,11 +36,12 @@ int main(int argc, char* argv[]) {
     read_graph(file_in,&n,&A);
     //print_graph(n,A);
 
+	t2 = clock();
     floyd = (int **) calloc(n,sizeof(int *));
     for (i=0;i<n;i++) {
         floyd[i] = (int *) calloc(n,sizeof(int));
     }
-	t2 = time(NULL);
+	
     for(k=0;k<n;k++) {
         for(i=0;i<n;i++) {
             for(j=0;j<n;j++) {
@@ -52,16 +53,16 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-	temp = time(NULL);
-	result1 = difftime(temp, t2);
-    printf("\n\n\n");
+	t2 = clock() - t2;
+	result1 = ((double) t2) / CLOCKS_PER_SEC;
+    //printf("\n\n\n");
     //print_graph(n,A);
     write_graph(file_out,n,A);
-	temp = time(NULL);
-	result2 = difftime(temp, t1);
+	t1 = clock() - t1;
+	result2 = ((double) t1)/ CLOCKS_PER_SEC;
 	
-	printf("Total Time: %f\n", result1);
-	printf("Floyd's Time: %f\n", result2);
+	printf("Total Time: %f\n", result2);
+	printf("Floyd's Time: %f\n", result1);
     return 0;
 }
 

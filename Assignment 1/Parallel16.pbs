@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -N Floyds-Parallel16CPU
+#PBS -l select=1:ncpus=16:mpiprocs=16:mem=4gb:interconnect=1g
+#PBS -l walltime=00:30:00
+#PBS -j oe
+
+source /etc/profile.d/modules.sh
+module purge
+module add gcc/4.8.1 openmpi/1.8.4
+
+cd $PBS_O_WORKDIR
+
+mpiexec -n 16 ./floyd-parallel Graph1000.dat Graph1000Out16P.dat
+
+mpiexec -n 16 ./floyd-parallel Graph2000.dat Graph2000Out16P.dat
+
+mpiexec -n 16 ./floyd-parallel Graph3000.dat Graph3000Out16P.dat
+

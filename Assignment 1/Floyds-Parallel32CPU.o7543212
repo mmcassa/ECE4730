@@ -1,0 +1,60 @@
+Time1: 16.602207
+Time2: 16.510151
+Time1: 21.093475
+Time2: 20.741163
+[node0027:26756] *** Process received signal ***
+[node0027:26756] Signal: Segmentation fault (11)
+[node0027:26756] Signal code: Address not mapped (1)
+[node0027:26756] Failing at address: 0x300000009
+[node0027:26756] [ 0] /lib64/libpthread.so.0(+0xf630)[0x14f72603b630]
+[node0027:26756] [ 1] /software/openmpi/1.8.4_gcc/lib/openmpi/mca_allocator_bucket.so(mca_allocator_bucket_cleanup+0x33d)[0x14f722f076ec]
+[node0027:26756] [ 2] /software/openmpi/1.8.4_gcc/lib/openmpi/mca_allocator_bucket.so(mca_allocator_bucket_finalize+0x21)[0x14f722f05d5a]
+[node0027:26756] [ 3] /software/openmpi/1.8.4_gcc/lib/openmpi/mca_pml_ob1.so(+0x8812)[0x14f72092a812]
+[node0027:26756] [ 4] /software/openmpi/1.8.4_gcc/lib/libmpi.so.1(+0x10b1a2)[0x14f7263531a2]
+[node0027:26756] [ 5] /software/openmpi/1.8.4_gcc/lib/libmpi.so.1(mca_pml_base_finalize+0x27)[0x14f72635140d]
+[node0027:26756] [ 6] /software/openmpi/1.8.4_gcc/lib/libmpi.so.1(ompi_mpi_finalize+0x816)[0x14f7262a1ea2]
+[node0027:26756] [ 7] /software/openmpi/1.8.4_gcc/lib/libmpi.so.1(PMPI_Finalize+0x59)[0x14f7262d20e5]
+[node0027:26756] [ 8] ./floyd-parallel[0x401829]
+[node0027:26756] [ 9] /lib64/libc.so.6(__libc_start_main+0xf5)[0x14f725c80545]
+[node0027:26756] [10] ./floyd-parallel[0x400fa9]
+[node0027:26756] *** End of error message ***
+--------------------------------------------------------------------------
+mpiexec noticed that process rank 0 with PID 26756 on node node0027 exited on signal 11 (Segmentation fault).
+--------------------------------------------------------------------------
+Time1: 31.665501
+Time2: 30.894827
+[node0027:27021] *** Process received signal ***
+[node0027:27021] Signal: Segmentation fault (11)
+[node0027:27021] Signal code: Address not mapped (1)
+[node0027:27021] Failing at address: 0x30000000b
+[node0027:27021] [ 0] /lib64/libpthread.so.0(+0xf630)[0x14d9389ac630]
+[node0027:27021] [ 1] /software/openmpi/1.8.4_gcc/lib/openmpi/mca_allocator_bucket.so(mca_allocator_bucket_cleanup+0x33d)[0x14d9358786ec]
+[node0027:27021] [ 2] /software/openmpi/1.8.4_gcc/lib/openmpi/mca_allocator_bucket.so(mca_allocator_bucket_finalize+0x21)[0x14d935876d5a]
+[node0027:27021] [ 3] /software/openmpi/1.8.4_gcc/lib/openmpi/mca_pml_ob1.so(+0x8812)[0x14d93329b812]
+[node0027:27021] [ 4] /software/openmpi/1.8.4_gcc/lib/libmpi.so.1(+0x10b1a2)[0x14d938cc41a2]
+[node0027:27021] [ 5] /software/openmpi/1.8.4_gcc/lib/libmpi.so.1(mca_pml_base_finalize+0x27)[0x14d938cc240d]
+[node0027:27021] [ 6] /software/openmpi/1.8.4_gcc/lib/libmpi.so.1(ompi_mpi_finalize+0x816)[0x14d938c12ea2]
+[node0027:27021] [ 7] /software/openmpi/1.8.4_gcc/lib/libmpi.so.1(PMPI_Finalize+0x59)[0x14d938c430e5]
+[node0027:27021] [ 8] ./floyd-parallel[0x401829]
+[node0027:27021] [ 9] /lib64/libc.so.6(__libc_start_main+0xf5)[0x14d9385f1545]
+[node0027:27021] [10] ./floyd-parallel[0x400fa9]
+[node0027:27021] *** End of error message ***
+--------------------------------------------------------------------------
+mpiexec noticed that process rank 0 with PID 27021 on node node0027 exited on signal 11 (Segmentation fault).
+--------------------------------------------------------------------------
+ 
+ 
++------------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES REQUESTED | 
++------------------------------------------+ 
+ 
+mem=8gb,ncpus=32,walltime=00:30:00
+ 
+ 
++-------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES USED | 
++-------------------------------------+ 
+ 
+cpupercent=2510,cput=00:07:30,mem=731836kb,ncpus=32,vmem=8951136kb,walltime=00:00:18
+ 
+ 

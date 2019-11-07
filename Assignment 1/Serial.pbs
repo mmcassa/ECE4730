@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#PBS -N Floyds-Serial
+#PBS -l select=1:ncpus=1:mpiprocs=1:mem=4gb:interconnect=1g
+#PBS -l walltime=00:30:00
+#PBS -j oe
+
+source /etc/profile.d/modules.sh
+module purge
+module add gcc/4.8.1 openmpi/1.8.4
+
+cd $PBS_O_WORKDIR
+
+mpiexec -n 1 ./floyd-serial Graph1000.dat Graph1000Out.dat
+
+mpiexec -n 1 ./floyd-serial Graph2000.dat Graph2000Out.dat
+
+mpiexec -n 1 ./floyd-serial Graph3000.dat Graph3000Out.dat

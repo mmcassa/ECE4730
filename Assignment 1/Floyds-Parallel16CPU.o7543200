@@ -1,0 +1,23 @@
+Time1: 68.540131
+Time2: 68.137390
+[node1553:13785] *** Process received signal ***
+[node1553:13785] Signal: Segmentation fault (11)
+[node1553:13785] Signal code: Address not mapped (1)
+[node1553:13785] Failing at address: 0x4020b6c40
+=>> PBS: job killed: walltime 1825 exceeded limit 1800
+ 
+ 
++------------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES REQUESTED | 
++------------------------------------------+ 
+ 
+mem=4gb,ncpus=16,walltime=00:30:00
+ 
+ 
++-------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES USED | 
++-------------------------------------+ 
+ 
+cpupercent=960,cput=00:18:09,mem=196768kb,ncpus=16,vmem=6253548kb,walltime=00:30:35
+ 
+ 

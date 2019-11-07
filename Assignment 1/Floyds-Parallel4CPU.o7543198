@@ -1,0 +1,21 @@
+[node0458:17336] *** Process received signal ***
+[node0458:17336] Signal: Segmentation fault (11)
+[node0458:17336] Signal code: Address not mapped (1)
+[node0458:17336] Failing at address: 0x401bd46a0
+=>> PBS: job killed: walltime 1828 exceeded limit 1800
+ 
+ 
++------------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES REQUESTED | 
++------------------------------------------+ 
+ 
+mem=4gb,ncpus=4,walltime=00:30:00
+ 
+ 
++-------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES USED | 
++-------------------------------------+ 
+ 
+cpupercent=300,cput=00:04:39,mem=80032kb,ncpus=4,vmem=1654996kb,walltime=00:30:28
+ 
+ 

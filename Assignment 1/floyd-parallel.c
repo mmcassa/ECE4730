@@ -93,59 +93,60 @@ int main(int argc, char* argv[]) {
         
     }
     MPI_Bcast (&n, 1, MPI_INT, 0, comm_grid);
-    //printf("%d %d\n",world_rank,n);
+    /* Send read in info to their respective nodes */
     distribute(MPI_INT,n,&loc_matrix,A,comm_grid);
     
     MPI_Cart_get(comm_grid, 2, grid_size, grid_period,grid_coord);
     int local_cols = BLOCK_SIZE(grid_coord[1],grid_size[1],n);
+    int local_rows = BLOCK_SIZE(grid_coord[0],grid_size[0],n);
     int local_k[2][2] = {   {BLOCK_LOW(grid_coord[0],grid_size[0],n),BLOCK_HIGH(grid_coord[0],grid_size[0],n)},
                             {BLOCK_LOW(grid_coord[1],grid_size[1],n),BLOCK_HIGH(grid_coord[1],grid_size[1],n)}
                             };
-    
+    int *recv_size;
+    int *recv_disp;
+    int *temp_arr;
+
+
     /* Begin Parallel Portion of the program */
-    //print_graph2(local_rows,local_cols,loc_matrix);
     time2 = MPI_Wtime();
-    printf("%d\n",world_rank);
+
+    //print_graph2(local_rows,local_cols,loc_matrix);
+
+    /* Comput Floyd's Algorithm */
     compute(comm_grid,row_comm,col_comm,world_rank,coords,dims,n,world_size,loc_matrix);
-    printf("%d\n",world_rank);
+
+
+    //printf("%d\n",world_rank);
     time2 = MPI_Wtime() - time2;
 
+
+
+    if (row_rank == 0) {
+        recv_size = (int *) calloc(grid_size[0],sizeof(int));
+        recv_disp = (int *) calloc(grid_size[0],sizeof(int));
+        temp_arr  = (int *) calloc(n,sizeof(int));
+    }
     
-    int *recv_size = (int *) calloc(grid_size[0],sizeof(int));
-    int *recv_disp = (int *) calloc(grid_size[0],sizeof(int));
-    int *temp_arr = (int *) calloc(n,sizeof(int));
-    
-    
+    // Gather the individual block sizes from each process onto the root of each row
     MPI_Gather(&local_cols,1,MPI_INT,recv_size,1,MPI_INT,0,row_comm);
-    
+    // Compute the displacement for the gatherv functions
     if (row_rank == 0) {
         //printf("%d:\t",world_rank);
         for (i=1;i<grid_size[1];i++) {
             for (j=i-1;j>=0;j--) {
                 recv_disp[i] += recv_size[j];
             }
-            //printf("%d ",recv_disp[i]);
         }
-        //printf("\n");
-
     }
-    /* Loop through every row */
+    /* Conduct the gathering to the root node */
     for (k=0;k<n;k++) {
         /* If process contains row, then gatherv to the root of the row */
         if (k >= local_k[0][0] && k <= local_k[0][1]) {
-
             /* If task is root of row, gather */
             if (row_rank == 0) {
                 MPI_Gatherv(loc_matrix[k-local_k[0][0]],local_cols,MPI_INT,temp_arr,recv_size,recv_disp,MPI_INT,0,row_comm);
-
-                /*for(i=0;i<n;i++) {
-                    printf("%d ",temp_arr[i]);
-                }
-                printf("\n");
-                */
             } else {
                 /* Else send to gatherv */
-
                 MPI_Gatherv(loc_matrix[k-local_k[0][0]],local_cols,MPI_INT,temp_arr,recv_size,recv_disp,MPI_INT,0,row_comm);
             }
         }
@@ -153,18 +154,23 @@ int main(int argc, char* argv[]) {
         if (world_rank == 0) {
             if (k >= local_k[0][0] && k <= local_k[0][1]) {
                 memcpy(A[k],temp_arr,sizeof(int)*n);
-                
             } else {
                 MPI_Recv(A[k],n,MPI_INT,findSource(grid_size,grid_coord,k,n),k,comm_grid,&status);
-                
             }
         /* If task has the gathered row, SEND with tag k to root */
         } else if (row_rank == 0 && k >= local_k[0][0] && k <= local_k[0][1]) {
             MPI_Send(temp_arr,n,MPI_INT,0,k,comm_grid);
         }
     }
+    //free(recv_size);
+    if (row_rank == 0) {
+        //free(recv_disp);
+        //free(temp_arr);
+    }
 
 
+
+    // Output gathered info from the root process
     if (world_rank == 0) {
         write_graph(file_out,n,A);
         time1 = MPI_Wtime() - time1;
@@ -176,7 +182,6 @@ int main(int argc, char* argv[]) {
      
     return 0;
 }
-
 
 
 /* Computes Floyd's Algorithm in Parallel */
@@ -228,9 +233,8 @@ void compute(   MPI_Comm grid,      // Grid comm
             
         }
         MPI_Allreduce((void *) temp_k,(void *) k_row,local_cols,MPI_INT,MPI_SUM,cols);
-
+        
         for (i=0;i<local_rows;i++) {
-
             
             if (local_k[1][0] <= k && local_k[1][1] >= k) {
                 rel_c = k - local_k[1][0];
@@ -251,7 +255,7 @@ void compute(   MPI_Comm grid,      // Grid comm
             }
         }  
     }
-    //printf("%d %d %d %d %d\n",rank,local_k[0][0],local_k[0][1],local_k[1][0],local_k[1][1]);
+    printf("%d %d %d %d %d\n",rank,local_k[0][0],local_k[0][1],local_k[1][0],local_k[1][1]);
 
 }
 

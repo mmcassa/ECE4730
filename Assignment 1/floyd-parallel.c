@@ -98,7 +98,6 @@ int main(int argc, char* argv[]) {
     
     MPI_Cart_get(comm_grid, 2, grid_size, grid_period,grid_coord);
     int local_cols = BLOCK_SIZE(grid_coord[1],grid_size[1],n);
-    int local_rows = BLOCK_SIZE(grid_coord[0],grid_size[0],n);
     int local_k[2][2] = {   {BLOCK_LOW(grid_coord[0],grid_size[0],n),BLOCK_HIGH(grid_coord[0],grid_size[0],n)},
                             {BLOCK_LOW(grid_coord[1],grid_size[1],n),BLOCK_HIGH(grid_coord[1],grid_size[1],n)}
                             };
@@ -364,7 +363,7 @@ void distribute (
 
 int findSource(int *grid_size,int *grid_coords,int k,int n) {
     int i=0;
-    while(BLOCK_HIGH(i,grid_size[0],n) < k) {
+    while(BLOCK_HIGH(i,grid_size[0],n) <= k) {
         i++;
     }
     return i*grid_size[1];

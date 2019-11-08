@@ -156,6 +156,7 @@ int main(int argc, char* argv[]) {
             } else {
                 MPI_Recv(A[k],n,MPI_INT,findSource(grid_size,grid_coord,k,n),k,comm_grid,&status);
             }
+            printf("%d\n",k);
         /* If task has the gathered row, SEND with tag k to root */
         } else if (row_rank == 0 && k >= local_k[0][0] && k <= local_k[0][1]) {
             MPI_Send(temp_arr,n,MPI_INT,0,k,comm_grid);
@@ -254,7 +255,7 @@ void compute(   MPI_Comm grid,      // Grid comm
             }
         }  
     }
-    printf("%d %d %d %d %d\n",rank,local_k[0][0],local_k[0][1],local_k[1][0],local_k[1][1]);
+    //printf("%d %d %d %d %d\n",rank,local_k[0][0],local_k[0][1],local_k[1][0],local_k[1][1]);
 
 }
 

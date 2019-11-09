@@ -48,9 +48,7 @@ void write_graph(char *file_name, int n, int **A) {
         printf("Error, invalid file name\n");  
         exit(0);
     }
-    printf("open\n");
     fprintf(file,"%d\n",n);
-    printf("open1\n");
     for (i = 0; i < n; i++)
     {
         printf("%d\n",i);

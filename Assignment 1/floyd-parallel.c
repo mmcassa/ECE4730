@@ -151,19 +151,13 @@ int main(int argc, char* argv[]) {
         }
         /* If task is world 0 RECV with tag k and store in A[k] */
         if (world_rank == 0) {
-            //printf("0 %d %d %d %d\n",k,local_k[0][0],local_k[0][1],BLOCK_OWNER(k,dims[0],n));
+            
             if (k >= local_k[0][0] && k <= local_k[0][1]) {
                 memcpy(A[k],temp_arr,sizeof(int)*n);
             } else {
                 MPI_Recv(A[k],n,MPI_INT,findSource(grid_size,grid_coord,k,n),k,comm_grid,&status);
             }
-            if (k == n-1) {
-                time1 = MPI_Wtime() - time1;
-                printf("Time1: %f\nTime2: %f\n",time1,time2);
-                write_graph(file_out,n,A);
-                
-            }
-            
+            printf("0 %d %d %d %d\n",k,local_k[0][0],local_k[0][1],BLOCK_OWNER(k,dims[0],n));
         /* If task has the gathered row, SEND with tag k to root */
         } else if (row_rank == 0 && k >= local_k[0][0] && k <= local_k[0][1]) {
             //printf("%d %d %d %d\n",world_rank,k,local_k[0][0],local_k[0][1]);
@@ -184,7 +178,7 @@ int main(int argc, char* argv[]) {
         time1 = MPI_Wtime() - time1;
         printf("Time1: %f\nTime2: %f\n",time1,time2);
     }
-       
+    MPI_Bcast(&n,1,MPI_INT,0,comm_grid);
     
     MPI_Finalize();
      

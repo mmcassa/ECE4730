@@ -51,7 +51,6 @@ void write_graph(char *file_name, int n, int **A) {
     fprintf(file,"%d\n",n);
     for (i = 0; i < n; i++)
     {
-        printf("%d\n",i);
         for (j = 0; j < n; j++)
         {
             fprintf(file, "%d ", A[i][j]);

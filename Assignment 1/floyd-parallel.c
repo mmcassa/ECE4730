@@ -36,8 +36,8 @@ void compute(   MPI_Comm grid,      // Grid comm
                 );
 
 int main(int argc, char* argv[]) {
-    float time1,time2;
-    time1 = MPI_Wtime();
+    double time1,time2;
+    
     int i,j,k,n;
     int dims[2] = {0,0};          // [# of rows, # of cols]
     
@@ -61,7 +61,10 @@ int main(int argc, char* argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 	int world_size;
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    
+    if (world_rank == 0) {
+        time1 = MPI_Wtime();
+        printf("Time Start: %f\n",time1);
+    }
 
     /* Create the grid of processes to communicate over */
     MPI_Comm comm_grid;
@@ -107,8 +110,10 @@ int main(int argc, char* argv[]) {
 
 
     /* Begin Parallel Portion of the program */
-    time2 = MPI_Wtime();
-
+    if (world_rank == 0) {
+        time2 = MPI_Wtime();
+        printf("Time Parallel Start: %f\n",time2);
+    }
     //print_graph2(local_rows,local_cols,loc_matrix);
 
     /* Comput Floyd's Algorithm */
@@ -116,9 +121,10 @@ int main(int argc, char* argv[]) {
 
 
     //printf("%d\n",world_rank);
-    time2 = MPI_Wtime() - time2;
-
-
+    if (world_rank == 0) {
+        time2 = MPI_Wtime() - time2;
+        printf("Time Parallel End: %f\n",MPI_Wtime());
+    }
 
     if (row_rank == 0) {
         recv_size = (int *) calloc(grid_size[0],sizeof(int));
@@ -176,6 +182,7 @@ int main(int argc, char* argv[]) {
     if (world_rank == 0) {
         write_graph(file_out,n,A);
         time1 = MPI_Wtime() - time1;
+        printf("Time End: %f\n",MPI_Wtime());
         printf("Time1: %f\nTime2: %f\n",time1,time2);
     }
     MPI_Bcast(&n,1,MPI_INT,0,comm_grid);

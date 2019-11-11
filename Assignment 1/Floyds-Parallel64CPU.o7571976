@@ -1,0 +1,34 @@
+Time Start: 1573512051.165939
+Time Parallel Start: 1573512051.619232
+Time Parallel End: 1573512054.424686
+Time End: 1573512054.648807
+Time1: 3.482868
+Time2: 2.805454
+Time Start: 1573512056.492936
+Time Parallel Start: 1573512057.564713
+Time Parallel End: 1573512069.946653
+Time End: 1573512070.840077
+Time1: 14.347141
+Time2: 12.381940
+Time Start: 1573512072.195305
+Time Parallel Start: 1573512074.286669
+Time Parallel End: 1573512102.119227
+Time End: 1573512104.159975
+Time1: 31.964670
+Time2: 27.832557
+ 
+ 
++------------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES REQUESTED | 
++------------------------------------------+ 
+ 
+mem=16gb,ncpus=64,walltime=00:30:00
+ 
+ 
++-------------------------------------+ 
+| PALMETTO CLUSTER PBS RESOURCES USED | 
++-------------------------------------+ 
+ 
+cpupercent=628,cput=00:08:00,mem=158936kb,ncpus=64,vmem=3100256kb,walltime=00:01:06
+ 
+ 

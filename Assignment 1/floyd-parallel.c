@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
             } else {
                 MPI_Recv(A[k],n,MPI_INT,findSource(grid_size,grid_coord,k,n),k,comm_grid,&status);
             }
-            printf("0 %d %d %d %d\n",k,local_k[0][0],local_k[0][1],BLOCK_OWNER(k,dims[0],n));
+            //printf("0 %d %d %d %d\n",k,local_k[0][0],local_k[0][1],BLOCK_OWNER(k,dims[0],n));
         /* If task has the gathered row, SEND with tag k to root */
         } else if (row_rank == 0 && k >= local_k[0][0] && k <= local_k[0][1]) {
             //printf("%d %d %d %d\n",world_rank,k,local_k[0][0],local_k[0][1]);

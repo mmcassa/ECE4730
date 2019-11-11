@@ -258,7 +258,8 @@ void compute(   MPI_Comm grid,      // Grid comm
         }  
     }
     //printf("%d %d %d %d %d\n",rank,local_k[0][0],local_k[0][1],local_k[1][0],local_k[1][1]);
-
+    free(temp_k);
+    free(k_row);
 }
 
 void distribute (
@@ -308,8 +309,8 @@ void distribute (
    /* Grid process 0 reads in the matrix one row at a time
       and distributes each row among the MPI processes. */
 
-   if (grid_id == 0)
-      buffer = (int *) calloc(n,sizeof(int));
+   //if (grid_id == 0)
+      //buffer = (int *) calloc(n,sizeof(int));
 
    /* For each row of processes in the process grid... */
    for (i = 0; i < grid_size[0]; i++) {
@@ -361,7 +362,8 @@ void distribute (
          }
       }
    }
-   if (grid_id == 0) free (buffer);
+   //if (grid_id == 0) free(buffer);
+
 }
 
 int findSource(int *grid_size,int *grid_coords,int k,int n) {
